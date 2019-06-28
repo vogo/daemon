@@ -27,7 +27,7 @@ type windowsRecord struct {
 	dependencies []string
 }
 
-func newDaemon(name, description string, dependencies []string) (Daemon, error) {
+func newDaemon(name, description, restart string, dependencies []string) (Daemon, error) {
 
 	return &windowsRecord{name, description, dependencies}, nil
 }

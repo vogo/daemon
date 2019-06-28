@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/robfig/cron"
-	"github.com/takama/daemon"
+	"github.com/vogo/daemon"
 )
 
 const (
@@ -80,7 +80,7 @@ func init() {
 }
 
 func main() {
-	srv, err := daemon.New(name, description)
+	srv, err := daemon.New(name, description, "always")
 	if err != nil {
 		errlog.Println("Error: ", err)
 		os.Exit(1)

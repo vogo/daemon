@@ -2,7 +2,7 @@
 
 A daemon package for use with Go (golang) services with no dependencies
 
-[![GoDoc](https://godoc.org/github.com/takama/daemon?status.svg)](https://godoc.org/github.com/takama/daemon)
+[![GoDoc](https://godoc.org/github.com/vogo/daemon?status.svg)](https://godoc.org/github.com/vogo/daemon)
 
 ## Examples
 
@@ -15,7 +15,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/takama/daemon"
+    "github.com/vogo/daemon"
 )
 
 func main() {
@@ -45,7 +45,7 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/takama/daemon"
+    "github.com/vogo/daemon"
 )
 
 const (
@@ -211,4 +211,4 @@ Thank you for your understanding!
 
 ## License
 
-[MIT Public License](https://github.com/takama/daemon/blob/master/LICENSE)
+[MIT Public License](https://github.com/vogo/daemon/blob/master/LICENSE)

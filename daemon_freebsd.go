@@ -66,7 +66,7 @@ func (bsd *bsdRecord) getCmd(cmd string) string {
 }
 
 // Get the daemon properly
-func newDaemon(name, description string, dependencies []string) (Daemon, error) {
+func newDaemon(name, description, restart string, dependencies []string) (Daemon, error) {
 	return &bsdRecord{name, description, dependencies}, nil
 }
 

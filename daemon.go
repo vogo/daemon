@@ -23,7 +23,7 @@ Example:
 		"os/signal"
 		"syscall"
 
-		"github.com/takama/daemon"
+		"github.com/vogo/daemon"
 	)
 
 	const (
@@ -192,8 +192,8 @@ type Executable interface {
 // New - Create a new daemon
 //
 // name: name of the service
-//
 // description: any explanation, what is the service, its purpose
-func New(name, description string, dependencies ...string) (Daemon, error) {
-	return newDaemon(strings.Join(strings.Fields(name), "_"), description, dependencies)
+// restart: restart flag
+func New(name, description string, restart string, dependencies ...string) (Daemon, error) {
+	return newDaemon(strings.Join(strings.Fields(name), "_"), description, restart, dependencies)
 }

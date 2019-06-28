@@ -9,11 +9,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/takama/daemon"
+	"github.com/vogo/daemon"
 )
 
 const (
-
 	// name of the service
 	name        = "myservice"
 	description = "My Echo Service"
@@ -120,7 +119,7 @@ func init() {
 }
 
 func main() {
-	srv, err := daemon.New(name, description, dependencies...)
+	srv, err := daemon.New(name, description, "always", dependencies...)
 	if err != nil {
 		errlog.Println("Error: ", err)
 		os.Exit(1)

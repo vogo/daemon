@@ -17,6 +17,7 @@ type systemDRecord struct {
 	name         string
 	description  string
 	dependencies []string
+	restart      string
 }
 
 // Standard service path for systemD daemons
@@ -84,10 +85,11 @@ func (linux *systemDRecord) Install(args ...string) (string, error) {
 	if err := templ.Execute(
 		file,
 		&struct {
-			Name, Description, Dependencies, Path, Args string
+			Name, Description, Restart, Dependencies, Path, Args string
 		}{
 			linux.name,
 			linux.description,
+			linux.restart,
 			strings.Join(linux.dependencies, " "),
 			execPatch,
 			strings.Join(args, " "),
@@ -208,7 +210,7 @@ After={{.Dependencies}}
 PIDFile=/var/run/{{.Name}}.pid
 ExecStartPre=/bin/rm -f /var/run/{{.Name}}.pid
 ExecStart={{.Path}} {{.Args}}
-Restart=on-failure
+Restart={{.Restart}}
 
 [Install]
 WantedBy=multi-user.target

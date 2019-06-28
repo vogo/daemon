@@ -10,10 +10,10 @@ import (
 )
 
 // Get the daemon properly
-func newDaemon(name, description string, dependencies []string) (Daemon, error) {
+func newDaemon(name, description, restart string, dependencies []string) (Daemon, error) {
 	// newer subsystem must be checked first
 	if _, err := os.Stat("/run/systemd/system"); err == nil {
-		return &systemDRecord{name, description, dependencies}, nil
+		return &systemDRecord{name, description, restart, dependencies}, nil
 	}
 	if _, err := os.Stat("/sbin/initctl"); err == nil {
 		return &upstartRecord{name, description, dependencies}, nil
