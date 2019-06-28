@@ -16,8 +16,8 @@ import (
 type systemDRecord struct {
 	name         string
 	description  string
-	dependencies []string
 	restart      string
+	dependencies []string
 }
 
 // Standard service path for systemD daemons
