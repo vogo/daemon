@@ -211,6 +211,7 @@ PIDFile=/var/run/{{.Name}}.pid
 ExecStartPre=/bin/rm -f /var/run/{{.Name}}.pid
 ExecStart={{.Path}} {{.Args}}
 Restart={{.Restart}}
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
