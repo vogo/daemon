@@ -22,19 +22,16 @@ import (
 
 // windowsRecord - standard record (struct) for windows version of daemon package
 type windowsRecord struct {
-	name         string
-	description  string
-	dependencies []string
+	*Config
 }
 
-func newDaemon(name, description, restart string, dependencies []string) (Daemon, error) {
-
-	return &windowsRecord{name, description, dependencies}, nil
+func newDaemon(config *Config) (Daemon, error) {
+	return &windowsRecord{config}, nil
 }
 
 // Install the service
 func (windows *windowsRecord) Install(args ...string) (string, error) {
-	installAction := "Install " + windows.description + ":"
+	installAction := "Install " + windows.Description + ":"
 
 	execp, err := execPath()
 
@@ -48,17 +45,17 @@ func (windows *windowsRecord) Install(args ...string) (string, error) {
 	}
 	defer m.Disconnect()
 
-	s, err := m.OpenService(windows.name)
+	s, err := m.OpenService(windows.Name)
 	if err == nil {
 		s.Close()
 		return installAction + failed, err
 	}
 
-	s, err = m.CreateService(windows.name, execp, mgr.Config{
-		DisplayName:  windows.name,
-		Description:  windows.description,
+	s, err = m.CreateService(windows.Name, execp, mgr.Config{
+		DisplayName:  windows.Name,
+		Description:  windows.Description,
 		StartType:    mgr.StartAutomatic,
-		Dependencies: windows.dependencies,
+		Dependencies: windows.Dependencies,
 	}, args...)
 	if err != nil {
 		return installAction + failed, err
@@ -70,14 +67,14 @@ func (windows *windowsRecord) Install(args ...string) (string, error) {
 
 // Remove the service
 func (windows *windowsRecord) Remove() (string, error) {
-	removeAction := "Removing " + windows.description + ":"
+	removeAction := "Removing " + windows.Description + ":"
 
 	m, err := mgr.Connect()
 	if err != nil {
 		return removeAction + failed, getWindowsError(err)
 	}
 	defer m.Disconnect()
-	s, err := m.OpenService(windows.name)
+	s, err := m.OpenService(windows.Name)
 	if err != nil {
 		return removeAction + failed, getWindowsError(err)
 	}
@@ -92,14 +89,14 @@ func (windows *windowsRecord) Remove() (string, error) {
 
 // Start the service
 func (windows *windowsRecord) Start() (string, error) {
-	startAction := "Starting " + windows.description + ":"
+	startAction := "Starting " + windows.Description + ":"
 
 	m, err := mgr.Connect()
 	if err != nil {
 		return startAction + failed, getWindowsError(err)
 	}
 	defer m.Disconnect()
-	s, err := m.OpenService(windows.name)
+	s, err := m.OpenService(windows.Name)
 	if err != nil {
 		return startAction + failed, getWindowsError(err)
 	}
@@ -113,14 +110,14 @@ func (windows *windowsRecord) Start() (string, error) {
 
 // Stop the service
 func (windows *windowsRecord) Stop() (string, error) {
-	stopAction := "Stopping " + windows.description + ":"
+	stopAction := "Stopping " + windows.Description + ":"
 
 	m, err := mgr.Connect()
 	if err != nil {
 		return stopAction + failed, getWindowsError(err)
 	}
 	defer m.Disconnect()
-	s, err := m.OpenService(windows.name)
+	s, err := m.OpenService(windows.Name)
 	if err != nil {
 		return stopAction + failed, getWindowsError(err)
 	}
@@ -185,7 +182,7 @@ func (windows *windowsRecord) Status() (string, error) {
 		return "Getting status:" + failed, getWindowsError(err)
 	}
 	defer m.Disconnect()
-	s, err := m.OpenService(windows.name)
+	s, err := m.OpenService(windows.Name)
 	if err != nil {
 		return "Getting status:" + failed, getWindowsError(err)
 	}
@@ -296,7 +293,7 @@ loop:
 }
 
 func (windows *windowsRecord) Run(e Executable) (string, error) {
-	runAction := "Running " + windows.description + ":"
+	runAction := "Running " + windows.Description + ":"
 
 	interactive, err := svc.IsAnInteractiveSession()
 	if err != nil {
@@ -305,7 +302,7 @@ func (windows *windowsRecord) Run(e Executable) (string, error) {
 	if !interactive {
 		// service called from windows service manager
 		// use API provided by golang.org/x/sys/windows
-		err = svc.Run(windows.name, &serviceHandler{
+		err = svc.Run(windows.Name, &serviceHandler{
 			executable: e,
 		})
 		if err != nil {

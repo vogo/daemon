@@ -159,7 +159,6 @@ import "strings"
 
 // Daemon interface has a standard set of methods/commands
 type Daemon interface {
-
 	// Install the service into the system
 	Install(args ...string) (string, error)
 
@@ -189,11 +188,20 @@ type Executable interface {
 	Run()
 }
 
+// Config daemon config
+type Config struct {
+	Name         string
+	Description  string
+	Restart      string
+	PreStart     string
+	PostStop     string
+	Dependencies []string
+}
+
 // New - Create a new daemon
 //
-// name: name of the service
-// description: any explanation, what is the service, its purpose
-// restart: restart flag
-func New(name, description string, restart string, dependencies ...string) (Daemon, error) {
-	return newDaemon(strings.Join(strings.Fields(name), "_"), description, restart, dependencies)
+// config: daemon config
+func New(c *Config) (Daemon, error) {
+	c.Name = strings.Join(strings.Fields(c.Name), "_")
+	return newDaemon(c)
 }

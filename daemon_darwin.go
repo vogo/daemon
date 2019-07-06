@@ -15,19 +15,17 @@ import (
 
 // darwinRecord - standard record (struct) for darwin version of daemon package
 type darwinRecord struct {
-	name         string
-	description  string
-	dependencies []string
+	*Config
 }
 
-func newDaemon(name, description, restart string, dependencies []string) (Daemon, error) {
+func newDaemon(config *Config) (Daemon, error) {
 
-	return &darwinRecord{name, description, dependencies}, nil
+	return &darwinRecord{config}, nil
 }
 
 // Standard service path for system daemons
 func (darwin *darwinRecord) servicePath() string {
-	return "/Library/LaunchDaemons/" + darwin.name + ".plist"
+	return "/Library/LaunchDaemons/" + darwin.Name + ".plist"
 }
 
 // Is a service installed
@@ -47,9 +45,9 @@ func execPath() (string, error) {
 
 // Check service is running
 func (darwin *darwinRecord) checkRunning() (string, bool) {
-	output, err := exec.Command("launchctl", "list", darwin.name).Output()
+	output, err := exec.Command("launchctl", "list", darwin.Name).Output()
 	if err == nil {
-		if matched, err := regexp.MatchString(darwin.name, string(output)); err == nil && matched {
+		if matched, err := regexp.MatchString(darwin.Name, string(output)); err == nil && matched {
 			reg := regexp.MustCompile("PID\" = ([0-9]+);")
 			data := reg.FindStringSubmatch(string(output))
 			if len(data) > 1 {
@@ -64,7 +62,7 @@ func (darwin *darwinRecord) checkRunning() (string, bool) {
 
 // Install the service
 func (darwin *darwinRecord) Install(args ...string) (string, error) {
-	installAction := "Install " + darwin.description + ":"
+	installAction := "Install " + darwin.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return installAction + failed, err
@@ -82,7 +80,7 @@ func (darwin *darwinRecord) Install(args ...string) (string, error) {
 	}
 	defer file.Close()
 
-	execPatch, err := executablePath(darwin.name)
+	execPatch, err := executablePath(darwin.Name)
 	if err != nil {
 		return installAction + failed, err
 	}
@@ -97,7 +95,7 @@ func (darwin *darwinRecord) Install(args ...string) (string, error) {
 		&struct {
 			Name, Path string
 			Args       []string
-		}{darwin.name, execPatch, args},
+		}{darwin.Name, execPatch, args},
 	); err != nil {
 		return installAction + failed, err
 	}
@@ -107,7 +105,7 @@ func (darwin *darwinRecord) Install(args ...string) (string, error) {
 
 // Remove the service
 func (darwin *darwinRecord) Remove() (string, error) {
-	removeAction := "Removing " + darwin.description + ":"
+	removeAction := "Removing " + darwin.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return removeAction + failed, err
@@ -126,7 +124,7 @@ func (darwin *darwinRecord) Remove() (string, error) {
 
 // Start the service
 func (darwin *darwinRecord) Start() (string, error) {
-	startAction := "Starting " + darwin.description + ":"
+	startAction := "Starting " + darwin.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return startAction + failed, err
@@ -149,7 +147,7 @@ func (darwin *darwinRecord) Start() (string, error) {
 
 // Stop the service
 func (darwin *darwinRecord) Stop() (string, error) {
-	stopAction := "Stopping " + darwin.description + ":"
+	stopAction := "Stopping " + darwin.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return stopAction + failed, err
@@ -188,7 +186,7 @@ func (darwin *darwinRecord) Status() (string, error) {
 
 // Run - Run service
 func (darwin *darwinRecord) Run(e Executable) (string, error) {
-	runAction := "Running " + darwin.description + ":"
+	runAction := "Running " + darwin.Description + ":"
 	e.Run()
 	return runAction + " completed.", nil
 }

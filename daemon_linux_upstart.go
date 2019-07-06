@@ -14,14 +14,12 @@ import (
 
 // upstartRecord - standard record (struct) for linux upstart version of daemon package
 type upstartRecord struct {
-	name         string
-	description  string
-	dependencies []string
+	*Config
 }
 
 // Standard service path for systemV daemons
 func (linux *upstartRecord) servicePath() string {
-	return "/etc/init/" + linux.name + ".conf"
+	return "/etc/init/" + linux.Name + ".conf"
 }
 
 // Is a service installed
@@ -36,9 +34,9 @@ func (linux *upstartRecord) isInstalled() bool {
 
 // Check service is running
 func (linux *upstartRecord) checkRunning() (string, bool) {
-	output, err := exec.Command("status", linux.name).Output()
+	output, err := exec.Command("status", linux.Name).Output()
 	if err == nil {
-		if matched, err := regexp.MatchString(linux.name+" start/running", string(output)); err == nil && matched {
+		if matched, err := regexp.MatchString(linux.Name+" start/running", string(output)); err == nil && matched {
 			reg := regexp.MustCompile("process ([0-9]+)")
 			data := reg.FindStringSubmatch(string(output))
 			if len(data) > 1 {
@@ -53,7 +51,7 @@ func (linux *upstartRecord) checkRunning() (string, bool) {
 
 // Install the service
 func (linux *upstartRecord) Install(args ...string) (string, error) {
-	installAction := "Install " + linux.description + ":"
+	installAction := "Install " + linux.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return installAction + failed, err
@@ -71,7 +69,7 @@ func (linux *upstartRecord) Install(args ...string) (string, error) {
 	}
 	defer file.Close()
 
-	execPatch, err := executablePath(linux.name)
+	execPatch, err := executablePath(linux.Name)
 	if err != nil {
 		return installAction + failed, err
 	}
@@ -85,7 +83,7 @@ func (linux *upstartRecord) Install(args ...string) (string, error) {
 		file,
 		&struct {
 			Name, Description, Path, Args string
-		}{linux.name, linux.description, execPatch, strings.Join(args, " ")},
+		}{linux.Name, linux.Description, execPatch, strings.Join(args, " ")},
 	); err != nil {
 		return installAction + failed, err
 	}
@@ -99,7 +97,7 @@ func (linux *upstartRecord) Install(args ...string) (string, error) {
 
 // Remove the service
 func (linux *upstartRecord) Remove() (string, error) {
-	removeAction := "Removing " + linux.description + ":"
+	removeAction := "Removing " + linux.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return removeAction + failed, err
@@ -118,7 +116,7 @@ func (linux *upstartRecord) Remove() (string, error) {
 
 // Start the service
 func (linux *upstartRecord) Start() (string, error) {
-	startAction := "Starting " + linux.description + ":"
+	startAction := "Starting " + linux.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return startAction + failed, err
@@ -132,7 +130,7 @@ func (linux *upstartRecord) Start() (string, error) {
 		return startAction + failed, ErrAlreadyRunning
 	}
 
-	if err := exec.Command("start", linux.name).Run(); err != nil {
+	if err := exec.Command("start", linux.Name).Run(); err != nil {
 		return startAction + failed, err
 	}
 
@@ -141,7 +139,7 @@ func (linux *upstartRecord) Start() (string, error) {
 
 // Stop the service
 func (linux *upstartRecord) Stop() (string, error) {
-	stopAction := "Stopping " + linux.description + ":"
+	stopAction := "Stopping " + linux.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return stopAction + failed, err
@@ -155,7 +153,7 @@ func (linux *upstartRecord) Stop() (string, error) {
 		return stopAction + failed, ErrAlreadyStopped
 	}
 
-	if err := exec.Command("stop", linux.name).Run(); err != nil {
+	if err := exec.Command("stop", linux.Name).Run(); err != nil {
 		return stopAction + failed, err
 	}
 
@@ -180,7 +178,7 @@ func (linux *upstartRecord) Status() (string, error) {
 
 // Run - Run service
 func (linux *upstartRecord) Run(e Executable) (string, error) {
-	runAction := "Running " + linux.description + ":"
+	runAction := "Running " + linux.Description + ":"
 	e.Run()
 	return runAction + " completed.", nil
 }

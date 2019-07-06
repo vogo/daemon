@@ -13,14 +13,12 @@ import (
 
 // systemVRecord - standard record (struct) for linux systemV version of daemon package
 type bsdRecord struct {
-	name         string
-	description  string
-	dependencies []string
+	*Config
 }
 
 // Standard service path for systemV daemons
 func (bsd *bsdRecord) servicePath() string {
-	return "/usr/local/etc/rc.d/" + bsd.name
+	return "/usr/local/etc/rc.d/" + bsd.Name
 }
 
 // Is a service installed
@@ -42,7 +40,7 @@ func (bsd *bsdRecord) isEnabled() (bool, error) {
 	}
 	defer rcConf.Close()
 	rcData, _ := ioutil.ReadAll(rcConf)
-	r, _ := regexp.Compile(`.*` + bsd.name + `_enable="YES".*`)
+	r, _ := regexp.Compile(`.*` + bsd.Name + `_enable="YES".*`)
 	v := string(r.Find(rcData))
 	var chrFound, sharpFound bool
 	for _, c := range v {
@@ -66,8 +64,8 @@ func (bsd *bsdRecord) getCmd(cmd string) string {
 }
 
 // Get the daemon properly
-func newDaemon(name, description, restart string, dependencies []string) (Daemon, error) {
-	return &bsdRecord{name, description, dependencies}, nil
+func newDaemon(config *Config) (Daemon, error) {
+	return &bsdRecord{config}, nil
 }
 
 func execPath() (name string, err error) {
@@ -85,9 +83,9 @@ func execPath() (name string, err error) {
 
 // Check service is running
 func (bsd *bsdRecord) checkRunning() (string, bool) {
-	output, err := exec.Command("service", bsd.name, bsd.getCmd("status")).Output()
+	output, err := exec.Command("service", bsd.Name, bsd.getCmd("status")).Output()
 	if err == nil {
-		if matched, err := regexp.MatchString(bsd.name, string(output)); err == nil && matched {
+		if matched, err := regexp.MatchString(bsd.Name, string(output)); err == nil && matched {
 			reg := regexp.MustCompile("pid  ([0-9]+)")
 			data := reg.FindStringSubmatch(string(output))
 			if len(data) > 1 {
@@ -102,7 +100,7 @@ func (bsd *bsdRecord) checkRunning() (string, bool) {
 
 // Install the service
 func (bsd *bsdRecord) Install(args ...string) (string, error) {
-	installAction := "Install " + bsd.description + ":"
+	installAction := "Install " + bsd.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return installAction + failed, err
@@ -120,7 +118,7 @@ func (bsd *bsdRecord) Install(args ...string) (string, error) {
 	}
 	defer file.Close()
 
-	execPatch, err := executablePath(bsd.name)
+	execPatch, err := executablePath(bsd.Name)
 	if err != nil {
 		return installAction + failed, err
 	}
@@ -134,7 +132,7 @@ func (bsd *bsdRecord) Install(args ...string) (string, error) {
 		file,
 		&struct {
 			Name, Description, Path, Args string
-		}{bsd.name, bsd.description, execPatch, strings.Join(args, " ")},
+		}{bsd.Name, bsd.Description, execPatch, strings.Join(args, " ")},
 	); err != nil {
 		return installAction + failed, err
 	}
@@ -148,7 +146,7 @@ func (bsd *bsdRecord) Install(args ...string) (string, error) {
 
 // Remove the service
 func (bsd *bsdRecord) Remove() (string, error) {
-	removeAction := "Removing " + bsd.description + ":"
+	removeAction := "Removing " + bsd.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return removeAction + failed, err
@@ -167,7 +165,7 @@ func (bsd *bsdRecord) Remove() (string, error) {
 
 // Start the service
 func (bsd *bsdRecord) Start() (string, error) {
-	startAction := "Starting " + bsd.description + ":"
+	startAction := "Starting " + bsd.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return startAction + failed, err
@@ -181,7 +179,7 @@ func (bsd *bsdRecord) Start() (string, error) {
 		return startAction + failed, ErrAlreadyRunning
 	}
 
-	if err := exec.Command("service", bsd.name, bsd.getCmd("start")).Run(); err != nil {
+	if err := exec.Command("service", bsd.Name, bsd.getCmd("start")).Run(); err != nil {
 		return startAction + failed, err
 	}
 
@@ -190,7 +188,7 @@ func (bsd *bsdRecord) Start() (string, error) {
 
 // Stop the service
 func (bsd *bsdRecord) Stop() (string, error) {
-	stopAction := "Stopping " + bsd.description + ":"
+	stopAction := "Stopping " + bsd.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return stopAction + failed, err
@@ -204,7 +202,7 @@ func (bsd *bsdRecord) Stop() (string, error) {
 		return stopAction + failed, ErrAlreadyStopped
 	}
 
-	if err := exec.Command("service", bsd.name, bsd.getCmd("stop")).Run(); err != nil {
+	if err := exec.Command("service", bsd.Name, bsd.getCmd("stop")).Run(); err != nil {
 		return stopAction + failed, err
 	}
 
@@ -229,7 +227,7 @@ func (bsd *bsdRecord) Status() (string, error) {
 
 // Run - Run service
 func (bsd *bsdRecord) Run(e Executable) (string, error) {
-	runAction := "Running " + bsd.description + ":"
+	runAction := "Running " + bsd.Description + ":"
 	e.Run()
 	return runAction + " completed.", nil
 }

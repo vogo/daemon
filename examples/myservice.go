@@ -119,7 +119,12 @@ func init() {
 }
 
 func main() {
-	srv, err := daemon.New(name, description, "always", dependencies...)
+	srv, err := daemon.New(&daemon.Config{
+		Name:         name,
+		Description:  description,
+		Restart:      "always",
+		Dependencies: dependencies,
+	})
 	if err != nil {
 		errlog.Println("Error: ", err)
 		os.Exit(1)

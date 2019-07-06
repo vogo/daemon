@@ -14,14 +14,12 @@ import (
 
 // systemVRecord - standard record (struct) for linux systemV version of daemon package
 type systemVRecord struct {
-	name         string
-	description  string
-	dependencies []string
+	*Config
 }
 
 // Standard service path for systemV daemons
 func (linux *systemVRecord) servicePath() string {
-	return "/etc/init.d/" + linux.name
+	return "/etc/init.d/" + linux.Name
 }
 
 // Is a service installed
@@ -36,9 +34,9 @@ func (linux *systemVRecord) isInstalled() bool {
 
 // Check service is running
 func (linux *systemVRecord) checkRunning() (string, bool) {
-	output, err := exec.Command("service", linux.name, "status").Output()
+	output, err := exec.Command("service", linux.Name, "status").Output()
 	if err == nil {
-		if matched, err := regexp.MatchString(linux.name, string(output)); err == nil && matched {
+		if matched, err := regexp.MatchString(linux.Name, string(output)); err == nil && matched {
 			reg := regexp.MustCompile("pid  ([0-9]+)")
 			data := reg.FindStringSubmatch(string(output))
 			if len(data) > 1 {
@@ -53,7 +51,7 @@ func (linux *systemVRecord) checkRunning() (string, bool) {
 
 // Install the service
 func (linux *systemVRecord) Install(args ...string) (string, error) {
-	installAction := "Install " + linux.description + ":"
+	installAction := "Install " + linux.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return installAction + failed, err
@@ -71,7 +69,7 @@ func (linux *systemVRecord) Install(args ...string) (string, error) {
 	}
 	defer file.Close()
 
-	execPatch, err := executablePath(linux.name)
+	execPatch, err := executablePath(linux.Name)
 	if err != nil {
 		return installAction + failed, err
 	}
@@ -85,7 +83,7 @@ func (linux *systemVRecord) Install(args ...string) (string, error) {
 		file,
 		&struct {
 			Name, Description, Path, Args string
-		}{linux.name, linux.description, execPatch, strings.Join(args, " ")},
+		}{linux.Name, linux.Description, execPatch, strings.Join(args, " ")},
 	); err != nil {
 		return installAction + failed, err
 	}
@@ -95,12 +93,12 @@ func (linux *systemVRecord) Install(args ...string) (string, error) {
 	}
 
 	for _, i := range [...]string{"2", "3", "4", "5"} {
-		if err := os.Symlink(srvPath, "/etc/rc"+i+".d/S87"+linux.name); err != nil {
+		if err := os.Symlink(srvPath, "/etc/rc"+i+".d/S87"+linux.Name); err != nil {
 			continue
 		}
 	}
 	for _, i := range [...]string{"0", "1", "6"} {
-		if err := os.Symlink(srvPath, "/etc/rc"+i+".d/K17"+linux.name); err != nil {
+		if err := os.Symlink(srvPath, "/etc/rc"+i+".d/K17"+linux.Name); err != nil {
 			continue
 		}
 	}
@@ -110,7 +108,7 @@ func (linux *systemVRecord) Install(args ...string) (string, error) {
 
 // Remove the service
 func (linux *systemVRecord) Remove() (string, error) {
-	removeAction := "Removing " + linux.description + ":"
+	removeAction := "Removing " + linux.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return removeAction + failed, err
@@ -125,12 +123,12 @@ func (linux *systemVRecord) Remove() (string, error) {
 	}
 
 	for _, i := range [...]string{"2", "3", "4", "5"} {
-		if err := os.Remove("/etc/rc" + i + ".d/S87" + linux.name); err != nil {
+		if err := os.Remove("/etc/rc" + i + ".d/S87" + linux.Name); err != nil {
 			continue
 		}
 	}
 	for _, i := range [...]string{"0", "1", "6"} {
-		if err := os.Remove("/etc/rc" + i + ".d/K17" + linux.name); err != nil {
+		if err := os.Remove("/etc/rc" + i + ".d/K17" + linux.Name); err != nil {
 			continue
 		}
 	}
@@ -140,7 +138,7 @@ func (linux *systemVRecord) Remove() (string, error) {
 
 // Start the service
 func (linux *systemVRecord) Start() (string, error) {
-	startAction := "Starting " + linux.description + ":"
+	startAction := "Starting " + linux.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return startAction + failed, err
@@ -154,7 +152,7 @@ func (linux *systemVRecord) Start() (string, error) {
 		return startAction + failed, ErrAlreadyRunning
 	}
 
-	if err := exec.Command("service", linux.name, "start").Run(); err != nil {
+	if err := exec.Command("service", linux.Name, "start").Run(); err != nil {
 		return startAction + failed, err
 	}
 
@@ -163,7 +161,7 @@ func (linux *systemVRecord) Start() (string, error) {
 
 // Stop the service
 func (linux *systemVRecord) Stop() (string, error) {
-	stopAction := "Stopping " + linux.description + ":"
+	stopAction := "Stopping " + linux.Description + ":"
 
 	if ok, err := checkPrivileges(); !ok {
 		return stopAction + failed, err
@@ -177,7 +175,7 @@ func (linux *systemVRecord) Stop() (string, error) {
 		return stopAction + failed, ErrAlreadyStopped
 	}
 
-	if err := exec.Command("service", linux.name, "stop").Run(); err != nil {
+	if err := exec.Command("service", linux.Name, "stop").Run(); err != nil {
 		return stopAction + failed, err
 	}
 
@@ -202,7 +200,7 @@ func (linux *systemVRecord) Status() (string, error) {
 
 // Run - Run service
 func (linux *systemVRecord) Run(e Executable) (string, error) {
-	runAction := "Running " + linux.description + ":"
+	runAction := "Running " + linux.Description + ":"
 	e.Run()
 	return runAction + " completed.", nil
 }
